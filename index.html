@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTL Forge — AI-Assisted RTL Development</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #060810;
+  --bg1:       #0a0e18;
+  --bg2:       #0d1220;
+  --bg3:       #111828;
+  --panel:     #0f1520;
+  --card:      #121a28;
+  --b1:        #1e2d45;
+  --b2:        #253550;
+  --b3:        #2e4060;
+  --accent:    #00c8f0;
+  --accent2:   #0088bb;
+  --green:     #00e89a;
+  --red:       #ff3d5a;
+  --yellow:    #ffcc44;
+  --orange:    #ff8833;
+  --purple:    #aa88ff;
+  --text:      #d0dff0;
+  --text2:     #7090b0;
+  --text3:     #384d66;
+  --glow-a:    rgba(0,200,240,0.15);
+  --glow-g:    rgba(0,232,154,0.15);
+  --glow-r:    rgba(255,61,90,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Rajdhani', sans-serif; font-size: 16px; }
+
+/* ─── GRID BG ─── */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,200,240,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,240,0.028) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.03) 3px,rgba(0,0,0,0.03) 4px);
+}
+
+/* ─── HEADER ─── */
+.hdr {
+  position: relative; z-index: 100;
+  height: 58px;
+  background: var(--bg1);
+  border-bottom: 2px solid var(--b2);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  box-shadow: 0 2px 24px rgba(0,200,240,0.08);
+}
+.hdr-logo { display: flex; align-items: center; gap: 14px; }
+.hdr-gem {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  clip-path: polygon(15% 0%,85% 0%,100% 15%,100% 85%,85% 100%,15% 100%,0% 85%,0% 15%);
+  display: grid; place-items: center;
+  box-shadow: 0 0 20px rgba(0,200,240,0.5);
+  animation: gemPulse 3s ease-in-out infinite;
+}
+@keyframes gemPulse { 0%,100%{ box-shadow:0 0 20px rgba(0,200,240,0.4); } 50%{ box-shadow:0 0 36px rgba(0,200,240,0.8); } }
+.hdr-gem svg { width: 18px; height: 18px; fill: #fff; }
+.hdr-title { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 3px; }
+.hdr-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 1px; }
+.hdr-right { display: flex; align-items: center; gap: 8px; }
+.badge {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 4px 12px; border: 1px solid; display: flex; align-items: center; gap: 6px;
+}
+.badge-g { border-color: var(--green); color: var(--green); background: var(--glow-g); }
+.badge-a { border-color: var(--accent2); color: var(--accent); background: var(--glow-a); }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{ opacity:1; } 50%{ opacity:0.1; } }
+
+/* ─── APP SHELL ─── */
+.app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  height: calc(100vh - 58px - 24px);
+}
+
+/* ─── ICON RAIL ─── */
+.rail {
+  background: var(--bg1);
+  border-right: 2px solid var(--b2);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 0; gap: 4px;
+}
+.rail-btn {
+  width: 48px; height: 48px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; background: none; border: 1px solid transparent;
+  cursor: pointer; transition: all 0.2s; position: relative;
+}
+.rail-btn svg { width: 20px; height: 20px; fill: var(--text3); transition: all 0.2s; }
+.rail-btn .rl { font-family: 'IBM Plex Mono',monospace; font-size: 7px; color: var(--text3); letter-spacing: 0.5px; transition: all 0.2s; }
+.rail-btn:hover { border-color: var(--b2); background: rgba(0,200,240,0.05); }
+.rail-btn:hover svg, .rail-btn:hover .rl { fill: var(--accent); color: var(--accent); }
+.rail-btn.active { border-color: var(--accent); background: rgba(0,200,240,0.1); }
+.rail-btn.active svg { fill: var(--accent); }
+.rail-btn.active .rl { color: var(--accent); }
+.rail-btn.active::before {
+  content: ''; position: absolute; left: -2px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 28px; background: var(--accent);
+}
+.rail-sep { width: 36px; height: 1px; background: var(--b1); margin: 6px 0; }
+.rail-info { margin-top: auto; }
+
+/* ─── WORKSPACE ─── */
+.workspace { display: flex; flex-direction: column; overflow: hidden; }
+
+/* ─── MODE BAR ─── */
+.modebar {
+  background: var(--bg1);
+  border-bottom: 2px solid var(--b2);
+  display: flex; align-items: stretch; padding: 0;
+  flex-shrink: 0;
+}
+.modeTab {
+  font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 0 28px; height: 46px; border: none; background: none;
+  color: var(--text3); cursor: pointer; transition: all 0.2s;
+  border-bottom: 3px solid transparent; display: flex; align-items: center; gap: 8px;
+}
+.modeTab:hover { color: var(--text2); background: rgba(0,200,240,0.03); }
+.modeTab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(0,200,240,0.06); }
+.modeTab svg { width: 16px; height: 16px; fill: currentColor; }
+.modeTab-spacer { flex: 1; }
+.modeTab-right { display: flex; align-items: center; padding: 0 16px; gap: 8px; border-left: 1px solid var(--b1); }
+
+/* ─── VIEWS ─── */
+.view { display: none; flex: 1; overflow: hidden; }
+.view.active { display: flex; }
+
+/* ═══════════════════════════════
+   DETECT VIEW
+═══════════════════════════════ */
+.detect-view {
+  flex-direction: row;
+  gap: 0;
+}
+
+/* Left: Editor Box */
+.editor-box {
+  flex: 1;
+  display: flex; flex-direction: column;
+  border: 2px solid var(--b2);
+  margin: 12px 6px 12px 12px;
+  background: var(--card);
+  overflow: hidden;
+  min-width: 0;
+}
+.box-header {
+  background: var(--bg2);
+  border-bottom: 2px solid var(--b2);
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.box-title {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; color: var(--accent); text-transform: uppercase;
+}
+.box-title-dim {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; color: var(--text3); text-transform: uppercase;
+}
+.box-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+.editor-wrap { display: flex; flex: 1; overflow: hidden; }
+.lnum {
+  font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.65;
+  color: var(--text3); padding: 14px 10px 14px 12px;
+  background: var(--bg2); border-right: 1px solid var(--b1);
+  min-width: 48px; text-align: right; user-select: none; overflow: hidden; flex-shrink: 0;
+}
+textarea.editor {
+  flex: 1; background: var(--card); border: none; outline: none;
+  color: var(--text); font-family: 'IBM Plex Mono', monospace;
+  font-size: 13.5px; line-height: 1.65; padding: 14px 18px;
+  resize: none; overflow-y: auto; tab-size: 2; white-space: pre;
+  caret-color: var(--accent);
+}
+textarea.editor::placeholder { color: var(--text3); font-size: 12px; line-height: 2.0; }
+
+/* Right: Results Box */
+.results-box {
+  width: 360px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border: 2px solid var(--b2);
+  margin: 12px 12px 12px 6px;
+  background: var(--card);
+  overflow: hidden;
+}
+.results-scroll {
+  flex: 1; overflow-y: auto; padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* ═══════════════════════════════
+   GENERATE VIEW
+═══════════════════════════════ */
+.gen-view {
+  flex-direction: column;
+  padding: 12px;
+  overflow-y: auto;
+  gap: 14px;
+}
+
+/* Config Box */
+.gen-config-box {
+  background: var(--card);
+  border: 2px solid var(--b2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.gen-config-inner {
+  padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.info-box {
+  background: rgba(0,200,240,0.05);
+  border: 1px solid rgba(0,200,240,0.2);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
+  color: var(--text2); line-height: 1.65;
+}
+.info-box b { color: var(--accent); }
+
+.field-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; color: var(--text3); text-transform: uppercase; margin-bottom: 7px;
+}
+textarea.prompt-ta {
+  width: 100%; background: var(--bg2); border: 2px solid var(--b2);
+  outline: none; color: var(--text); font-family: 'Rajdhani', sans-serif;
+  font-size: 16px; padding: 12px 16px; resize: none; line-height: 1.5;
+  min-height: 80px; transition: border-color 0.2s; caret-color: var(--accent);
+}
+textarea.prompt-ta:focus { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(0,200,240,0.2); }
+textarea.prompt-ta::placeholder { color: var(--text3); }
+
+.chips-box {
+  background: var(--bg2);
+  border: 1px solid var(--b1);
+  padding: 12px;
+  display: flex; flex-wrap: wrap; gap: 7px;
+}
+.chip {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  padding: 5px 12px; border: 1px solid var(--b2);
+  color: var(--text2); cursor: pointer; transition: all 0.18s; background: var(--bg3);
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,200,240,0.06); transform: translateY(-1px); }
+
+.cfg-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.cfg-item { background: var(--bg2); border: 1px solid var(--b2); padding: 10px 12px; }
+.cfg-item label {
+  display: block; font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; color: var(--text3);
+  text-transform: uppercase; margin-bottom: 7px;
+}
+.cfg-item select {
+  width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--b2);
+  color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+  padding: 4px 0; outline: none; appearance: none; cursor: pointer;
+}
+.cfg-item select:focus { border-bottom-color: var(--accent); }
+
+.gen-btn-row { display: flex; align-items: center; gap: 14px; padding: 16px 24px; border-top: 1px solid var(--b1); background: var(--bg2); }
+.gen-btn-hint { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text3); }
+
+/* ═══════════════════════════════
+   RESULT CARDS
+═══════════════════════════════ */
+.rcard {
+  background: var(--bg2);
+  border: 2px solid var(--b2);
+  overflow: hidden;
+  animation: cardIn 0.3s ease forwards;
+}
+@keyframes cardIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+.rcard + .rcard { /* gap handled by flex */ }
+
+.rcard-hd {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--b1);
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg1);
+}
+.rcard-bd { padding: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; line-height: 1.7; color: var(--text2); }
+
+.tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 9px; border: 1px solid;
+}
+.tag-ok     { border-color: var(--green);  color: var(--green);  background: var(--glow-g); }
+.tag-err    { border-color: var(--red);    color: var(--red);    background: var(--glow-r); }
+.tag-warn   { border-color: var(--yellow); color: var(--yellow); background: rgba(255,204,68,0.1); }
+.tag-info   { border-color: var(--accent); color: var(--accent); background: var(--glow-a); }
+.tag-purple { border-color: var(--purple); color: var(--purple); background: rgba(170,136,255,0.1); }
+
+.issue-row {
+  padding: 8px 0; border-bottom: 1px solid var(--b1);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.issue-row:last-child { border-bottom: none; padding-bottom: 0; }
+.il { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--accent); min-width: 56px; flex-shrink: 0; padding-top: 1px; }
+.ib { font-size: 11.5px; line-height: 1.55; }
+.sbg { font-family: 'IBM Plex Mono', monospace; font-size: 9px; padding: 1px 6px; display: inline-block; margin-right: 4px; border: 1px solid; }
+.sbg-e { border-color: var(--red);    color: var(--red); }
+.sbg-w { border-color: var(--yellow); color: var(--yellow); }
+.rbg { font-size: 9px; color: var(--text3); }
+.fix-line { margin-top: 5px; padding: 5px 9px; background: rgba(0,232,154,0.07); border-left: 2px solid var(--green); font-size: 10.5px; color: var(--green); }
+
+.cbar { height: 4px; background: var(--b1); margin: 8px 0; }
+.cbar-fill { height: 100%; transition: width 0.7s ease; }
+
+pre.cblock {
+  background: var(--bg); border: 1px solid var(--b2);
+  padding: 12px 14px; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px; color: var(--green); overflow: auto;
+  white-space: pre; line-height: 1.65; max-height: 280px;
+  margin-top: 8px;
+}
+
+/* ─── BUTTONS ─── */
+.btn {
+  font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 9px 20px; border: 2px solid; cursor: pointer; transition: all 0.18s;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #000; }
+.btn-primary:hover { background: #00eeff; box-shadow: 0 0 24px rgba(0,200,240,0.55); }
+.btn-outline { background: transparent; border-color: var(--b2); color: var(--text2); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); background: var(--glow-a); }
+.btn-del { background: transparent; border-color: rgba(255,61,90,0.35); color: var(--red); }
+.btn-del:hover { border-color: var(--red); background: var(--glow-r); }
+.btn-green { background: var(--green); border-color: var(--green); color: #000; }
+.btn-green:hover { box-shadow: 0 0 24px rgba(0,232,154,0.45); }
+.btn-sm { font-size: 9px; padding: 5px 12px; letter-spacing: 1px; font-family: 'IBM Plex Mono', monospace; }
+
+.btn-primary.running {
+  background: linear-gradient(90deg, var(--accent), #00eeff, var(--accent));
+  background-size: 200% auto; animation: shimmer 1s linear infinite;
+}
+@keyframes shimmer { 0%{background-position:-200%} 100%{background-position:200%} }
+
+/* Loading */
+.ld-row { display: flex; align-items: center; gap: 10px; padding: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); }
+.lds span { display: inline-block; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; margin: 0 2px; animation: ld 1.2s ease-in-out infinite; }
+.lds span:nth-child(2){animation-delay:0.2s} .lds span:nth-child(3){animation-delay:0.4s}
+@keyframes ld { 0%,60%,100%{transform:scale(1);opacity:0.35} 30%{transform:scale(1.6);opacity:1} }
+
+/* Empty state */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 14px; text-align: center; padding: 20px; }
+.empty-ico { font-size: 46px; opacity: 0.2; }
+.empty-txt { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); line-height: 1.8; }
+
+/* copy mini */
+.cpbtn { font-family: 'IBM Plex Mono', monospace; font-size: 9px; padding: 3px 9px; background: transparent; border: 1px solid var(--b2); color: var(--text3); cursor: pointer; letter-spacing: 1px; transition: all 0.2s; margin-left: auto; }
+.cpbtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ─── INFO OVERLAY ─── */
+.overlay { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+.overlay.open { display: flex; }
+.modal {
+  background: var(--bg1); border: 2px solid var(--b2);
+  width: 900px; max-width: 95vw; max-height: 90vh;
+  display: flex; flex-direction: column;
+  animation: mIn 0.25s ease;
+  box-shadow: 0 0 80px rgba(0,0,0,0.8), 0 0 40px rgba(0,200,240,0.06);
+}
+@keyframes mIn { from{opacity:0;transform:scale(0.95) translateY(14px)} to{opacity:1;transform:none} }
+.modal-hd {
+  padding: 18px 24px; border-bottom: 2px solid var(--b2);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  background: var(--bg2);
+}
+.modal-hd-title { font-family: 'Orbitron', monospace; font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
+.modal-close { width: 32px; height: 32px; background: none; border: 1px solid var(--b2); color: var(--text2); cursor: pointer; font-size: 16px; transition: all 0.2s; display: grid; place-items: center; }
+.modal-close:hover { border-color: var(--red); color: var(--red); }
+.modal-body { overflow-y: auto; flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+.msec-title {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  letter-spacing: 2.5px; color: var(--accent2); text-transform: uppercase;
+  padding-bottom: 10px; border-bottom: 1px solid var(--b2); margin-bottom: 14px;
+}
+.about-p { font-size: 15.5px; color: var(--text2); line-height: 1.75; }
+.about-p b { color: var(--text); }
+.about-p + .about-p { margin-top: 10px; }
+
+.rules-g { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rule-c { background: var(--bg3); border: 2px solid var(--b1); padding: 14px 16px; transition: border-color 0.2s; }
+.rule-c:hover { border-color: var(--b3); }
+.rc-id { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--accent); margin-bottom: 5px; letter-spacing: 1.5px; }
+.rc-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+.rc-desc { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text2); line-height: 1.55; }
+.rc-sev { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 9px; padding: 2px 7px; border: 1px solid; margin-top: 8px; }
+.rc-e { border-color: var(--red);    color: var(--red); }
+.rc-w { border-color: var(--yellow); color: var(--yellow); }
+
+.mods-g { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.mod-c { background: var(--bg3); border: 2px solid var(--b1); padding: 14px 16px; text-align: center; transition: all 0.2s; }
+.mod-c:hover { border-color: var(--accent2); background: rgba(0,200,240,0.04); }
+.mod-ico { font-size: 26px; margin-bottom: 8px; }
+.mod-name { font-size: 15px; font-weight: 700; letter-spacing: 1px; }
+.mod-desc { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 5px; line-height: 1.5; }
+
+/* ─── STATUS ─── */
+.statusbar {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 24px; z-index: 300;
+  background: var(--accent); display: flex; align-items: center; padding: 0 16px; gap: 18px;
+}
+.statusbar span { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #000; letter-spacing: 0.8px; }
+.statusbar .sep { color: rgba(0,0,0,0.3); }
+#smode { font-weight: 600; }
+
+/* scrollbars */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--b3); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-gem">
+      <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm0 10h8v8H3zm10 0h8v8H13zm4-6V3l4 4-4 4V7h-4V5h4z"/></svg>
+    </div>
+    <div>
+      <div class="hdr-title">RTL FORGE</div>
+      <div class="hdr-sub">AI-Assisted RTL Development Platform</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="badge badge-g"><span class="live-dot"></span>Rule Engine Active</div>
+    <div class="badge badge-a">v3.0</div>
+  </div>
+</header>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- RAIL -->
+  <nav class="rail">
+    <button class="rail-btn active" id="rb-detect" onclick="switchMode('detect')" title="Detect & Fix Errors">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <span class="rl">Detect</span>
+    </button>
+    <button class="rail-btn" id="rb-generate" onclick="switchMode('generate')" title="Generate RTL">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4zM17 14l5 3-5 3v-6z"/></svg>
+      <span class="rl">Generate</span>
+    </button>
+    <div class="rail-sep"></div>
+    <button class="rail-btn rail-info" onclick="openInfo()" title="Code Information">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      <span class="rl">Info</span>
+    </button>
+  </nav>
+
+  <!-- WORKSPACE -->
+  <div class="workspace">
+
+    <!-- MODE BAR -->
+    <div class="modebar">
+      <button class="modeTab active" id="mt-detect" onclick="switchMode('detect')">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        Detect &amp; Fix Errors
+      </button>
+      <button class="modeTab" id="mt-generate" onclick="switchMode('generate')">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4zM17 14l5 3-5 3v-6z"/></svg>
+        Generate RTL
+      </button>
+      <div class="modeTab-spacer"></div>
+      <div class="modeTab-right">
+        <button class="btn btn-outline btn-sm" onclick="openInfo()">
+          ◈ Code Information
+        </button>
+      </div>
+    </div>
+
+    <!-- ════ DETECT VIEW ════ -->
+    <div class="view active detect-view" id="view-detect">
+
+      <!-- Editor Box -->
+      <div class="editor-box">
+        <div class="box-header">
+          <span class="box-title">Input Verilog</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--b3);margin-left:4px">input.v</span>
+          <span id="lc" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-left:12px">Lines: 0</span>
+          <div class="box-actions">
+            <button class="btn btn-del btn-sm" onclick="clearEditor()">✕ Clear</button>
+            <button class="btn btn-primary btn-sm" id="analyze-btn" onclick="analyzeCode()">▶ Analyze</button>
+          </div>
+        </div>
+        <div class="editor-wrap">
+          <div class="lnum" id="lnum">1</div>
+          <textarea class="editor" id="editor"
+            placeholder="// Paste or type your Verilog RTL code here...
+//
+// Supported: Counters · FSMs · Shift Registers · ALU · Combinational
+//
+// Rule engine detects:
+//   • Blocking assignments in sequential always blocks
+//   • Missing reset logic in flip-flops
+//   • Incomplete case statements (latch inference)
+//   • FSM state register errors
+//   • Sensitivity list issues
+//   • Counter overflow warnings
+//   • Multiple driver detection
+//
+// Every Analyze click runs a FRESH check on current code."
+            oninput="updateLN()" onscroll="syncSc()" onkeydown="handleTab(event)"></textarea>
+        </div>
+      </div>
+
+      <!-- Results Box -->
+      <div class="results-box">
+        <div class="box-header">
+          <span class="box-title-dim">Analysis Output</span>
+          <div class="box-actions">
+            <button class="btn btn-outline btn-sm" onclick="clearResults()">Clear</button>
+          </div>
+        </div>
+        <div class="results-scroll" id="results">
+          <div class="empty" id="empty-state">
+            <div class="empty-ico">◈</div>
+            <div class="empty-txt">Paste Verilog code<br>and click ▶ Analyze<br><br>Every click re-runs<br>a fresh analysis.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /detect-view -->
+
+    <!-- ════ GENERATE VIEW ════ -->
+    <div class="view gen-view" id="view-generate">
+
+      <div class="gen-config-box">
+        <div class="gen-config-inner">
+
+          <div class="info-box">
+            <b>How it works:</b> Describe your RTL module in plain English. The generator parses your prompt, selects the correct synthesizable template, and opens the result in a <b>new full-page window</b> with the generated Verilog, rule check, complexity analysis, and AI description.
+          </div>
+
+          <div>
+            <div class="field-label">Describe Your Module</div>
+            <textarea class="prompt-ta" id="prompt-input" rows="3"
+              placeholder="e.g. 8-bit synchronous up counter with active-low reset and enable signal"></textarea>
+          </div>
+
+          <div>
+            <div class="field-label" style="margin-bottom:8px">Quick Examples — Click to use</div>
+            <div class="chips-box">
+              <span class="chip" onclick="setP(this)">4-bit synchronous up counter with reset</span>
+              <span class="chip" onclick="setP(this)">8-bit Johnson counter</span>
+              <span class="chip" onclick="setP(this)">Traffic light FSM with 4 states</span>
+              <span class="chip" onclick="setP(this)">Moore FSM sequence detector for 1011</span>
+              <span class="chip" onclick="setP(this)">8-bit PISO shift register</span>
+              <span class="chip" onclick="setP(this)">4-bit bidirectional shift register</span>
+              <span class="chip" onclick="setP(this)">4-bit ALU with add subtract AND OR</span>
+              <span class="chip" onclick="setP(this)">16-bit down counter with load</span>
+              <span class="chip" onclick="setP(this)">Vending machine FSM</span>
+              <span class="chip" onclick="setP(this)">2-bit gray counter</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="field-label" style="margin-bottom:8px">Configuration</div>
+            <div class="cfg-row">
+              <div class="cfg-item">
+                <label>Module Type</label>
+                <select id="cfg-type">
+                  <option value="auto">Auto Detect</option>
+                  <option value="counter">Counter</option>
+                  <option value="fsm">FSM</option>
+                  <option value="shift">Shift Register</option>
+                  <option value="alu">ALU</option>
+                </select>
+              </div>
+              <div class="cfg-item">
+                <label>Bit Width</label>
+                <select id="cfg-width">
+                  <option value="auto">Auto</option>
+                  <option value="4">4-bit</option>
+                  <option value="8">8-bit</option>
+                  <option value="16">16-bit</option>
+                  <option value="32">32-bit</option>
+                </select>
+              </div>
+              <div class="cfg-item">
+                <label>Reset Type</label>
+                <select id="cfg-reset">
+                  <option value="sync">Synchronous</option>
+                  <option value="async">Asynchronous</option>
+                </select>
+              </div>
+              <div class="cfg-item">
+                <label>Reset Polarity</label>
+                <select id="cfg-polarity">
+                  <option value="high">Active High</option>
+                  <option value="low">Active Low (rst_n)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="gen-btn-row">
+          <button class="btn btn-primary" id="gen-btn" onclick="generateRTL()">▶ Generate RTL</button>
+          <span class="gen-btn-hint">Results open in a new full-page window →</span>
+        </div>
+      </div>
+
+    </div><!-- /gen-view -->
+
+  </div><!-- /workspace -->
+</div><!-- /app -->
+
+<!-- INFO OVERLAY -->
+<div class="overlay" id="info-overlay" onclick="if(event.target===this)closeInfo()">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-hd-title">◈ Code Information &amp; Platform Guide</span>
+      <button class="modal-close" onclick="closeInfo()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="msec-title">About RTL Forge</div>
+        <p class="about-p"><b>RTL Forge</b> is a web-based AI-assisted RTL development platform for early-stage semiconductor design. It combines a <b>deterministic rule-based validation engine</b> with an <b>AI inference layer</b> to detect structural Verilog errors, generate synthesizable code from natural language descriptions, and provide design guidance.</p>
+        <p class="about-p">The platform supports <b>Detect &amp; Fix</b> (paste code → run 8 rule checks → get auto-corrected output) and <b>Generate RTL</b> (describe a module → get synthesizable Verilog in a new page with full analysis). Final validation via linting, simulation, and synthesis tools remains the engineer's responsibility.</p>
+      </div>
+      <div>
+        <div class="msec-title">Rule Engine — All 8 Active Checks</div>
+        <div class="rules-g">
+          <div class="rule-c"><div class="rc-id">R01 · BLOCKING_IN_SEQ</div><div class="rc-name">Blocking in Sequential Block</div><div class="rc-desc">Detects = instead of &lt;= inside always @(posedge clk). Causes simulation-synthesis mismatches.</div><span class="rc-sev rc-e">ERROR</span></div>
+          <div class="rule-c"><div class="rc-id">R02 · MISSING_RESET</div><div class="rc-name">Missing Reset Logic</div><div class="rc-desc">Checks that every sequential always has reset handling. Flip-flops without reset have undefined initial state.</div><span class="rc-sev rc-w">WARNING</span></div>
+          <div class="rule-c"><div class="rc-id">R03 · INCOMPLETE_CASE</div><div class="rc-name">Incomplete Case Statement</div><div class="rc-desc">Flags case statements missing a default clause — triggers latch inference in combinational logic.</div><span class="rc-sev rc-e">ERROR</span></div>
+          <div class="rule-c"><div class="rc-id">R04 · LATCH_INFERENCE</div><div class="rc-name">Latch Inference Risk</div><div class="rc-desc">Detects if without else in combinational always blocks — missing coverage creates unintended latches.</div><span class="rc-sev rc-w">WARNING</span></div>
+          <div class="rule-c"><div class="rc-id">R05 · SENS_LIST</div><div class="rc-name">Explicit Sensitivity List</div><div class="rc-desc">Warns when always uses an explicit signal list instead of @(*). Can cause simulation mismatches.</div><span class="rc-sev rc-w">WARNING</span></div>
+          <div class="rule-c"><div class="rc-id">R06 · FSM_STATE_REG</div><div class="rc-name">FSM State Register Error</div><div class="rc-desc">Detects FSM state register using blocking assignment — causes race conditions in state transitions.</div><span class="rc-sev rc-e">ERROR</span></div>
+          <div class="rule-c"><div class="rc-id">R07 · COUNTER_OVERFLOW</div><div class="rc-name">Counter Overflow Check</div><div class="rc-desc">Warns when counter increment found without visible wrap/max-count condition.</div><span class="rc-sev rc-w">WARNING</span></div>
+          <div class="rule-c"><div class="rc-id">R08 · MULTI_DRIVER</div><div class="rc-name">Multiple Driver Detection</div><div class="rc-desc">Identifies signals assigned in too many locations — potential multiple drivers causing X-propagation.</div><span class="rc-sev rc-w">WARNING</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="msec-title">Supported RTL Categories</div>
+        <div class="mods-g">
+          <div class="mod-c"><div class="mod-ico">⬆</div><div class="mod-name">Counters</div><div class="mod-desc">Up/Down/Bidirectional/Modulo/Gray/Johnson. Sync &amp; async reset, enable, load.</div></div>
+          <div class="mod-c"><div class="mod-ico">◉</div><div class="mod-name">FSMs</div><div class="mod-desc">Moore/Mealy. Traffic light, vending machine, sequence detector. 2 &amp; 3-always styles.</div></div>
+          <div class="mod-c"><div class="mod-ico">⇒</div><div class="mod-name">Shift Registers</div><div class="mod-desc">SISO/PISO/PIPO. Johnson ring. Bidirectional with direction control.</div></div>
+          <div class="mod-c"><div class="mod-ico">⊕</div><div class="mod-name">ALU Blocks</div><div class="mod-desc">4–32 bit. Configurable: ADD, SUB, AND, OR, XOR, NOT, SHL, SHR.</div></div>
+          <div class="mod-c"><div class="mod-ico">⊞</div><div class="mod-name">Combinational</div><div class="mod-desc">Mux, decoder, encoder, priority logic, custom blocks.</div></div>
+          <div class="mod-c" style="opacity:0.45;border-style:dashed"><div class="mod-ico">⊗</div><div class="mod-name">Restricted</div><div class="mod-desc">AXI/CPU pipelines/cache/SoC — not in v3 prototype.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <span id="smode">DETECT MODE</span>
+  <span class="sep">|</span>
+  <span id="stxt">READY</span>
+  <span class="sep">|</span>
+  <span>Rule Engine: 8 checks</span>
+  <span class="sep">|</span>
+  <span id="siss">Issues: —</span>
+  <span class="sep">|</span>
+  <span>AI: Claude Sonnet</span>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  RULE ENGINE  (always runs fresh on current code)
+// ══════════════════════════════════════════
+
+function runAllRules(code) {
+  if (!code || !code.trim()) return [];
+  const lines = code.split('\n');
+  return [
+    ...rBlockingSeq(lines),
+    ...rMissingReset(code, lines),
+    ...rIncompleteCase(lines),
+    ...rLatchInference(lines),
+    ...rSensList(lines),
+    ...rFsmCheck(lines),
+    ...rCounterOverflow(lines),
+    ...rMultiDriver(lines)
+  ];
+}
+
+function rBlockingSeq(lines) {
+  const issues = [];
+  let inSeq = false, depth = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i], t = raw.trim();
+    if (/always\s*@\s*\([^)]*(?:posedge|negedge)/.test(t)) { inSeq = true; depth = 0; }
+    if (inSeq) {
+      depth += (raw.match(/\bbegin\b/g)||[]).length;
+      depth -= (raw.match(/\bend\b/g)||[]).length;
+      // detect blocking: line has = but not <= , not comparison == , not in comment
+      const noComment = raw.split('//')[0];
+      if (/\w[\w\s\[\]]*\s*=(?![<=])/.test(noComment) &&
+          !/^\s*(if|else|case|parameter|localparam|assign|always|module|input|output|reg|wire|end|begin)\b/.test(t)) {
+        issues.push({ line: i+1, sev:'E', rule:'R01',
+          msg: 'Blocking assignment (=) in sequential always block — use non-blocking (<=) for flip-flops.',
+          fix: raw.replace(/(\w[\w\s\[\]]*)\s*=\s*(?![<=])/g, (m,g) => g + ' <= ')
+        });
+      }
+      if (depth < 0 || (/^\s*end\s*$/.test(t) && depth <= 0)) inSeq = false;
+    }
+  }
+  return issues;
+}
+
+function rMissingReset(code, lines) {
+  const issues = [];
+  for (const m of code.matchAll(/always\s*@\s*\([^)]*(?:posedge|negedge)[^)]*\)/g)) {
+    const block = code.substring(m.index, m.index + 900);
+    const hasRst = /\b(rst|reset|rst_n|areset|sreset)\b/i.test(block) &&
+                   /(if\s*\(\s*[!]?\s*(?:rst|reset|rst_n|areset|sreset))/i.test(block);
+    const ln = code.substring(0, m.index).split('\n').length;
+    if (!hasRst) issues.push({ line: ln, sev:'W', rule:'R02',
+      msg: 'Sequential always block missing reset logic — all flip-flops should have a defined reset state.', fix: null });
+  }
+  return issues;
+}
+
+function rIncompleteCase(lines) {
+  const issues = [];
+  let inCase = false, caseVar = '', hasDef = false, startLn = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    const cm = t.match(/^case\s*\(\s*(\w+)\s*\)/);
+    if (cm) { inCase = true; caseVar = cm[1]; hasDef = false; startLn = i+1; }
+    if (inCase) {
+      if (/^\s*default\s*:/.test(t)) hasDef = true;
+      if (/^endcase/.test(t)) {
+        if (!hasDef) issues.push({ line: startLn, sev:'E', rule:'R03',
+          msg: `case(${caseVar}) missing 'default' clause — may infer latches in combinational logic.`,
+          fix: `    default: ; // specify default behavior` });
+        inCase = false;
+      }
+    }
+  }
+  return issues;
+}
+
+function rLatchInference(lines) {
+  const issues = [];
+  let inC = false, aLn = 0, sIdx = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (/always\s*@\s*\(\s*\*\s*\)|always_comb/.test(t)) { inC = true; aLn = i+1; sIdx = i; }
+    if (inC && i > sIdx && /^\s*end\s*$/.test(t)) {
+      const sl = lines.slice(sIdx, i);
+      if (sl.some(l => /\bif\b/.test(l)) && !sl.some(l => /\belse\b/.test(l)))
+        issues.push({ line: aLn, sev:'W', rule:'R04',
+          msg: 'Possible latch inference — combinational always has if without else. Add else or default assignments.', fix: null });
+      inC = false;
+    }
+  }
+  return issues;
+}
+
+function rSensList(lines) {
+  const issues = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/always\s*@\s*\(([^)]+)\)/);
+    if (m && !/posedge|negedge|\*/.test(m[1]))
+      issues.push({ line: i+1, sev:'W', rule:'R05',
+        msg: `Explicit sensitivity list "${m[1].trim()}" — use always @(*) to avoid incomplete coverage.`,
+        fix: 'always @(*)' });
+  }
+  return issues;
+}
+
+function rFsmCheck(lines) {
+  const issues = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (/(?:state|current_state)\s*=(?!=)\s*(?:next_state|n_state)/i.test(lines[i]))
+      issues.push({ line: i+1, sev:'E', rule:'R06',
+        msg: 'FSM state register uses blocking (=) — must use non-blocking (<=) for state flip-flop.',
+        fix: lines[i].replace(/(\w+)\s*=\s*(\w+)/, '$1 <= $2') });
+  }
+  return issues;
+}
+
+function rCounterOverflow(lines) {
+  const issues = [];
+  const code = lines.join('\n');
+  const hasWrap = /==\s*(?:\d+|MAX|max)\b/.test(code) || /\b(?:MAX|max)\s*==/.test(code);
+  for (let i = 0; i < lines.length; i++) {
+    if (/(?:count|cnt)\s*<=\s*(?:count|cnt)\s*\+/.test(lines[i]) && !hasWrap)
+      issues.push({ line: i+1, sev:'W', rule:'R07',
+        msg: 'Counter increment without visible wrap/overflow protection — verify max count condition.', fix: null });
+  }
+  return issues;
+}
+
+function rMultiDriver(lines) {
+  const issues = [];
+  const assigned = {};
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    const m = t.match(/^(\w+)\s*(?:<=|=)\s*/);
+    if (m && !/^(if|else|case|module|input|output|parameter|localparam|assign|end|begin|always)/.test(t)) {
+      const s = m[1];
+      if (!/^\d/.test(s)) { assigned[s] = assigned[s]||[]; assigned[s].push(i+1); }
+    }
+  }
+  Object.entries(assigned).forEach(([sig, lns]) => {
+    if (lns.length >= 3)
+      issues.push({ line: lns[0], sev:'W', rule:'R08',
+        msg: `Signal '${sig}' assigned ${lns.length}× (lines: ${lns.join(', ')}) — check for multiple drivers.`, fix: null });
+  });
+  return issues;
+}
+
+function autoFix(code, issues) {
+  let lines = code.split('\n');
+  // Fix blocking assignments
+  issues.forEach(iss => {
+    if (iss.fix && ['R01','R06'].includes(iss.rule)) {
+      const idx = iss.line - 1;
+      if (lines[idx]) lines[idx] = lines[idx].replace(/(\w[\w\s\[\:]]*)\s*=\s*(?![<=])/g, (m,g) => g + ' <= ');
+    }
+  });
+  // Add missing default to case
+  if (issues.some(i => i.rule === 'R03')) {
+    for (let i = 0; i < lines.length; i++) {
+      if (/^\s*endcase/.test(lines[i])) {
+        const ind = lines[i].match(/^(\s*)/)[1];
+        lines.splice(i, 0, ind + '  default: ; // TODO: specify default');
+        i++;
+      }
+    }
+  }
+  return lines.join('\n');
+}
+
+function estimateComplexity(code) {
+  const lines = code.split('\n').filter(l => l.trim() && !l.trim().startsWith('//'));
+  let s = 0;
+  s += lines.length * 0.5;
+  s += (code.match(/always\s*@/g)||[]).length * 10;
+  s += (code.match(/\bif\b/g)||[]).length * 3;
+  s += (code.match(/\bcase\b/g)||[]).length * 8;
+  s += (code.match(/\breg\b/g)||[]).length * 5;
+  s += (code.match(/\bwire\b/g)||[]).length * 2;
+  s += (code.match(/parameter|localparam/g)||[]).length * 2;
+  const st = code.match(/[A-Z_]{2,}(?:\s*=\s*\d+|\s*,)/g);
+  if (st) s += st.length * 5;
+  let lv, cl;
+  if (s < 30) { lv='LOW'; cl='#00e89a'; }
+  else if (s < 80) { lv='MEDIUM'; cl='#ffcc44'; }
+  else if (s < 150) { lv='HIGH'; cl='#ff8833'; }
+  else { lv='VERY HIGH'; cl='#ff3d5a'; }
+  return { score: Math.round(s), level: lv, color: cl, pct: Math.min(100, Math.round(s/2)) };
+}
+
+// ══════════════════════════════════════════
+//  VERILOG TEMPLATES
+// ══════════════════════════════════════════
+const T = {
+  counter(o) {
+    const w=o.width||8, rst=o.resetPol==='low'?'rst_n':'rst';
+    const rc=o.resetPol==='low'?`!${rst}`:rst;
+    const edge=o.resetType==='async'?`posedge clk or posedge ${rst}`:'posedge clk';
+    let inc = o.bidirectional
+      ? `if (up_down) count <= count + 1;\n      else       count <= count - 1;`
+      : o.isDown
+        ? `if (count == 0) count <= ${w}'d0;\n      else count <= count - 1;`
+        : o.modulo ? `if (count == MOD-1) count <= 0;\n      else count <= count + 1;`
+        : `count <= count + 1;`;
+    if (o.hasEnable) inc = `if (en) begin\n        ${inc}\n      end`;
+    if (o.hasLoad)   inc = `if (load) count <= data_in;\n      else begin\n        ${inc}\n      end`;
+    return `module counter_${w}b (\n  input  wire        clk,\n  input  wire        ${rst},${o.hasEnable?'\n  input  wire        en,':''}${o.hasLoad?`\n  input  wire        load,\n  input  wire [${w-1}:0] data_in,`:''}${o.bidirectional?'\n  input  wire        up_down,':''}\n  output reg  [${w-1}:0] count\n);\n${o.modulo?`\n  parameter MOD = ${Math.pow(2,w)};\n`:''}\n  always @(${edge}) begin\n    if (${rc}) begin\n      count <= ${w}'d0;\n    end else begin\n      ${inc}\n    end\n  end\n\nendmodule`;
+  },
+  fsm(o) {
+    const states=o.states||['IDLE','S0','S1','S2'];
+    const w=Math.ceil(Math.log2(states.length))||2;
+    const rst=o.resetPol==='low'?'rst_n':'rst', rc=o.resetPol==='low'?`!${rst}`:rst;
+    const edge=o.resetType==='async'?`posedge clk or posedge ${rst}`:'posedge clk';
+    const defs=states.map((s,i)=>`  localparam ${s} = ${w}'d${i};`).join('\n');
+    const nsCases=states.map(s=>`      ${s}: begin\n        // TODO: next state logic\n        next_state = ${states[0]};\n      end`).join('\n');
+    return `module fsm_module (\n  input  wire clk,\n  input  wire ${rst},\n  input  wire in,\n  output reg  out\n);\n\n${defs}\n\n  reg [${w-1}:0] current_state, next_state;\n\n  // State register (sequential)\n  always @(${edge}) begin\n    if (${rc}) current_state <= ${states[0]};\n    else       current_state <= next_state;\n  end\n\n  // Next-state logic (combinational)\n  always @(*) begin\n    next_state = current_state;\n    case (current_state)\n${nsCases}\n      default: next_state = ${states[0]};\n    endcase\n  end\n\n  // Output logic (Moore)\n  always @(*) begin\n    out = 1'b0;\n    case (current_state)\n      ${states[0]}: out = 1'b0;\n      default: out = 1'b0;\n    endcase\n  end\n\nendmodule`;
+  },
+  shift(o) {
+    const w=o.width||8, rst=o.resetPol==='low'?'rst_n':'rst', rc=o.resetPol==='low'?`!${rst}`:rst;
+    let logic = o.isJohnson
+      ? `shift_reg <= {~shift_reg[0], shift_reg[${w-1}:1]};`
+      : o.isPISO ? `if (load) shift_reg <= parallel_in;\n      else       shift_reg <= {1'b0, shift_reg[${w-1}:1]};`
+      : o.bidirectional ? `if (dir) shift_reg <= {shift_reg[${w-2}:0], serial_in};\n      else     shift_reg <= {1'b0, shift_reg[${w-1}:1]};`
+      : `shift_reg <= {shift_reg[${w-2}:0], serial_in};`;
+    const ep=(o.isPISO?`\n  input  wire [${w-1}:0] parallel_in,\n  input  wire        load,`:'')+(o.bidirectional?'\n  input  wire        dir,':'');
+    return `module shift_reg_${w}b (\n  input  wire        clk,\n  input  wire        ${rst},${ep}\n  input  wire        serial_in,\n  output wire        serial_out,\n  output reg  [${w-1}:0] shift_reg\n);\n  assign serial_out = shift_reg[${w-1}];\n  always @(posedge clk) begin\n    if (${rc}) shift_reg <= ${w}'d0;\n    else       ${logic}\n  end\nendmodule`;
+  },
+  alu(o) {
+    const w=o.width||4, ops=o.ops||['ADD','SUB','AND','OR'];
+    const cmap={ADD:`{cout,result} = a + b;`,SUB:`begin result=a-b; cout=(a<b); end`,AND:`begin result=a&b; cout=1'b0; end`,OR:`begin result=a|b; cout=1'b0; end`,XOR:`begin result=a^b; cout=1'b0; end`,NOT:`begin result=~a; cout=1'b0; end`,SHL:`begin result=a<<1; cout=a[${w-1}]; end`,SHR:`begin result=a>>1; cout=a[0]; end`};
+    const body=ops.map((op,i)=>`      3'd${i}: ${cmap[op]||`begin result=a; cout=1'b0; end`}`).join('\n');
+    return `module alu_${w}b (\n  input  wire [${w-1}:0] a, b,\n  input  wire [2:0]  opcode,\n  output reg  [${w-1}:0] result,\n  output reg         cout,\n  output wire        zero,\n  output wire        negative\n);\n  assign zero     = (result == ${w}'b0);\n  assign negative = result[${w-1}];\n  always @(*) begin\n    {cout,result} = 0;\n    case (opcode)\n${body}\n      default: begin result=0; cout=1'b0; end\n    endcase\n  end\nendmodule`;
+  },
+  trafficFSM: `module traffic_light_fsm (\n  input  wire clk, rst, timer_expired,\n  output reg  [2:0] lights  // {R,Y,G}\n);\n  localparam RED=2'd0, GREEN=2'd1, YELLOW=2'd2, WALK=2'd3;\n  reg [1:0] state, next_state;\n  always @(posedge clk) begin\n    if (rst) state <= RED; else state <= next_state;\n  end\n  always @(*) begin\n    next_state = state;\n    if (timer_expired)\n      case (state)\n        RED:    next_state = GREEN;\n        GREEN:  next_state = YELLOW;\n        YELLOW: next_state = RED;\n        WALK:   next_state = RED;\n        default: next_state = RED;\n      endcase\n  end\n  always @(*) begin\n    case (state)\n      RED:    lights = 3'b100;\n      GREEN:  lights = 3'b001;\n      YELLOW: lights = 3'b010;\n      WALK:   lights = 3'b100;\n      default: lights = 3'b100;\n    endcase\n  end\nendmodule`,
+  vendingFSM: `module vending_machine (\n  input  wire clk, rst, coin_5, coin_10,\n  output reg  dispense, change\n);\n  localparam S0=2'd0,S5=2'd1,S10=2'd2,S15=2'd3;\n  reg [1:0] state, next_state;\n  always @(posedge clk) begin\n    if (rst) state <= S0; else state <= next_state;\n  end\n  always @(*) begin\n    next_state = state;\n    case (state)\n      S0: if(coin_10) next_state=S10; else if(coin_5) next_state=S5;\n      S5: if(coin_10) next_state=S15; else if(coin_5) next_state=S10;\n      S10: if(coin_10||coin_5) next_state=S15;\n      S15: next_state=S0;\n      default: next_state=S0;\n    endcase\n  end\n  always @(*) begin\n    dispense = (state==S15); change = (state==S15 && coin_10);\n  end\nendmodule`,
+  seqDet: `// Sequence Detector: 1011 (Moore FSM)\nmodule seq_detector_1011 (\n  input  wire clk, rst, in,\n  output reg  detected\n);\n  localparam S0=3'd0,S1=3'd1,S10=3'd2,S101=3'd3,S1011=3'd4;\n  reg [2:0] state, next_state;\n  always @(posedge clk) begin\n    if (rst) state <= S0; else state <= next_state;\n  end\n  always @(*) begin\n    case (state)\n      S0:    next_state = in ? S1    : S0;\n      S1:    next_state = in ? S1    : S10;\n      S10:   next_state = in ? S101  : S0;\n      S101:  next_state = in ? S1011 : S10;\n      S1011: next_state = in ? S1    : S10;\n      default: next_state = S0;\n    endcase\n  end\n  always @(*) detected = (state == S1011);\nendmodule`,
+  grayCounter: (w) => `// ${w}-bit Gray Code Counter\nmodule gray_counter_${w}b (\n  input  wire       clk, rst, en,\n  output wire [${w-1}:0] gray_out\n);\n  reg [${w-1}:0] bin;\n  always @(posedge clk) begin\n    if (rst) bin <= 0; else if (en) bin <= bin + 1;\n  end\n  assign gray_out = bin ^ (bin >> 1);\nendmodule`
+};
+
+function parsePrompt(p) {
+  const lp = p.toLowerCase();
+  const o = {
+    width: 8,
+    resetType: document.getElementById('cfg-reset').value,
+    resetPol: document.getElementById('cfg-polarity').value,
+    type: document.getElementById('cfg-type').value
+  };
+  const wm = lp.match(/(\d+)[\s-]?bit/); if (wm) o.width=parseInt(wm[1]);
+  const wc = document.getElementById('cfg-width').value; if(wc!=='auto') o.width=parseInt(wc);
+  if (o.type==='auto') {
+    if (/(fsm|state machine|detector|traffic|vending|moore|mealy)/i.test(lp)) o.type='fsm';
+    else if (/(shift|piso|siso|johnson|ring)/i.test(lp)) o.type='shift';
+    else if (/(alu|arithmetic|logic unit)/i.test(lp)) o.type='alu';
+    else o.type='counter';
+  }
+  o.isDown=(/down/.test(lp)&&!/up.?down/.test(lp));
+  o.bidirectional=(/bi.?dir|up.?down|down.?up/.test(lp));
+  o.hasEnable=(/enable|en\b/.test(lp));
+  o.hasLoad=(/load|parallel/.test(lp));
+  o.modulo=(/mod(ulo)?/.test(lp));
+  o.isJohnson=(/johnson/.test(lp));
+  o.isPISO=(/piso/.test(lp));
+  o.isGray=(/gray/.test(lp));
+  o.isTraffic=(/traffic/.test(lp));
+  o.isVending=(/vending/.test(lp));
+  o.isSeqDet=(/1011|sequence detect/.test(lp));
+  const sm=lp.match(/(\d+)\s*state/);
+  if (sm) { const n=parseInt(sm[1]); o.states=['IDLE',...Array.from({length:n-1},(_,i)=>`S${i}`)]; }
+  o.ops=[];
+  if(/add/i.test(lp)) o.ops.push('ADD');
+  if(/sub/i.test(lp)) o.ops.push('SUB');
+  if(/\band\b/i.test(lp)) o.ops.push('AND');
+  if(/\bor\b/i.test(lp)) o.ops.push('OR');
+  if(/xor/i.test(lp)) o.ops.push('XOR');
+  if(/not|inv/i.test(lp)) o.ops.push('NOT');
+  if(o.ops.length===0) o.ops=['ADD','SUB','AND','OR'];
+  return o;
+}
+
+function buildVerilog(opts) {
+  if(opts.isTraffic) return T.trafficFSM;
+  if(opts.isVending) return T.vendingFSM;
+  if(opts.isSeqDet)  return T.seqDet;
+  if(opts.isGray)    return T.grayCounter(opts.width);
+  switch(opts.type){
+    case 'fsm':   return T.fsm(opts);
+    case 'shift': return T.shift(opts);
+    case 'alu':   return T.alu(opts);
+    default:      return T.counter(opts);
+  }
+}
+
+// ══════════════════════════════════════════
+//  AI API
+// ══════════════════════════════════════════
+async function callAI(system, user) {
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, system, messages:[{role:"user",content:user}] })
+  });
+  const d = await r.json();
+  if(d.content&&d.content[0]) return d.content[0].text;
+  throw new Error(d.error?.message||'API error');
+}
+
+// ══════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setStatus(t,iss){ document.getElementById('stxt').textContent=t; if(iss!=null) document.getElementById('siss').textContent=iss; }
+
+function ldHTML(msg){ return `<div class="ld-row"><div class="lds"><span></span><span></span><span></span></div><span>${msg}</span></div>`; }
+
+function updateLN() {
+  const ed=document.getElementById('editor'), ln=document.getElementById('lnum');
+  const lines=ed.value.split('\n');
+  document.getElementById('lc').textContent=`Lines: ${lines.length} | Chars: ${ed.value.length}`;
+  ln.innerHTML=lines.map((_,i)=>i+1).join('<br>');
+}
+function syncSc(){ document.getElementById('lnum').scrollTop=document.getElementById('editor').scrollTop; }
+function handleTab(e){ if(e.key==='Tab'){e.preventDefault();const s=e.target.selectionStart,en=e.target.selectionEnd;e.target.value=e.target.value.substring(0,s)+'  '+e.target.value.substring(en);e.target.selectionStart=e.target.selectionEnd=s+2;} }
+
+function switchMode(m) {
+  ['detect','generate'].forEach(t=>{
+    document.getElementById('view-'+t).classList.toggle('active',t===m);
+    document.getElementById('mt-'+t).classList.toggle('active',t===m);
+    document.getElementById('rb-'+t).classList.toggle('active',t===m);
+  });
+  document.getElementById('smode').textContent=m==='detect'?'DETECT MODE':'GENERATE MODE';
+}
+
+function clearEditor(){ document.getElementById('editor').value=''; updateLN(); }
+function clearResults(){
+  document.getElementById('results').innerHTML=`<div class="empty" id="empty-state"><div class="empty-ico">◈</div><div class="empty-txt">Paste Verilog code<br>and click ▶ Analyze<br><br>Every click runs<br>a fresh analysis.</div></div>`;
+  setStatus('READY','Issues: —');
+}
+function setP(el){ document.getElementById('prompt-input').value=el.textContent; }
+function openInfo(){ document.getElementById('info-overlay').classList.add('open'); }
+function closeInfo(){ document.getElementById('info-overlay').classList.remove('open'); }
+
+// ══════════════════════════════════════════
+//  ANALYZE — always fresh
+// ══════════════════════════════════════════
+async function analyzeCode() {
+  const code = document.getElementById('editor').value; // raw, no trim — re-read every time
+  if (!code.trim()) { alert('Please enter Verilog code to analyze.'); return; }
+
+  const btn = document.getElementById('analyze-btn');
+  btn.classList.add('running'); btn.textContent = 'Analyzing...';
+  setStatus('RUNNING RULE ENGINE...', null);
+
+  // ALWAYS run fresh — no cache
+  const issues = runAllRules(code);
+  const cplx   = estimateComplexity(code);
+  const fixed  = issues.length ? autoFix(code, issues) : null;
+  const errCnt = issues.filter(i=>i.sev==='E').length;
+  const wrnCnt = issues.filter(i=>i.sev==='W').length;
+
+  const rb = document.getElementById('results');
+  rb.innerHTML = '';
+
+  // ── Card 1: Summary ──
+  const sumCls = errCnt>0?'tag-err':wrnCnt>0?'tag-warn':'tag-ok';
+  const sumLbl = errCnt>0?'ERRORS FOUND':wrnCnt>0?'WARNINGS':'CLEAN CODE';
+  rb.innerHTML += `<div class="rcard">
+    <div class="rcard-hd">
+      <span class="tag ${sumCls}">${sumLbl}</span>
+      <button class="cpbtn" onclick="navigator.clipboard.writeText(document.getElementById('editor').value).then(()=>{this.textContent='COPIED!';setTimeout(()=>this.textContent='COPY',1500)})">COPY INPUT</button>
+    </div>
+    <div class="rcard-bd">
+      Lines: <b style="color:#00c8f0">${code.split('\n').length}</b> &nbsp;·&nbsp;
+      Errors: <b style="color:#ff3d5a">${errCnt}</b> &nbsp;·&nbsp;
+      Warnings: <b style="color:#ffcc44">${wrnCnt}</b>
+    </div>
+  </div>`;
+
+  // ── Card 2: Issues ──
+  if (issues.length) {
+    const issH = issues.map(iss=>`
+      <div class="issue-row">
+        <span class="il">Line ${iss.line}</span>
+        <div class="ib">
+          <span class="sbg ${iss.sev==='E'?'sbg-e':'sbg-w'}">${iss.sev}</span>
+          <span class="rbg">[${iss.rule}]</span>
+          <span style="color:${iss.sev==='E'?'#d0dff0':'#c0b0a0'};margin-left:4px">${esc(iss.msg)}</span>
+          ${iss.fix?`<div class="fix-line">Suggested fix: ${esc(iss.fix.trim().substring(0,120))}</div>`:''}
+        </div>
+      </div>`).join('');
+    rb.innerHTML += `<div class="rcard">
+      <div class="rcard-hd">
+        <span class="tag tag-err">DETECTED ISSUES</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-left:auto">${issues.length} issue${issues.length>1?'s':''}</span>
+      </div>
+      <div class="rcard-bd">${issH}</div>
+    </div>`;
+  } else {
+    rb.innerHTML += `<div class="rcard">
+      <div class="rcard-hd"><span class="tag tag-ok">NO ISSUES</span></div>
+      <div class="rcard-bd" style="color:var(--green)">All 8 rule checks passed. No structural issues detected.</div>
+    </div>`;
+  }
+
+  // ── Card 3: Complexity ──
+  rb.innerHTML += `<div class="rcard">
+    <div class="rcard-hd"><span class="tag tag-info">COMPLEXITY</span></div>
+    <div class="rcard-bd">
+      Classification: <b style="color:${cplx.color}">${cplx.level}</b>
+      <div class="cbar"><div class="cbar-fill" style="width:${cplx.pct}%;background:${cplx.color}"></div></div>
+      Score: ${cplx.score} <span style="color:var(--text3);font-size:10px;margin-left:6px">/ ~200 (always blocks · case depth · reg count)</span>
+    </div>
+  </div>`;
+
+  // ── Card 4: Auto-fix ──
+  if (fixed && fixed !== code) {
+    const fid = 'fix-'+Date.now();
+    rb.innerHTML += `<div class="rcard">
+      <div class="rcard-hd">
+        <span class="tag tag-ok">AUTO-FIXED VERSION</span>
+        <button class="cpbtn" onclick="navigator.clipboard.writeText(document.getElementById('${fid}').textContent).then(()=>{this.textContent='COPIED!';setTimeout(()=>this.textContent='COPY',1500)})">COPY</button>
+      </div>
+      <div class="rcard-bd">
+        Blocking→non-blocking fixed · Missing defaults added.
+        <pre class="cblock" id="${fid}">${esc(fixed)}</pre>
+        <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="document.getElementById('editor').value=document.getElementById('${fid}').textContent;updateLN()">↺ Load Fix Back into Editor</button>
+      </div>
+    </div>`;
+  }
+
+  // ── Card 5: AI (async) ──
+  const aiId = 'ai-'+Date.now();
+  rb.innerHTML += `<div class="rcard" id="${aiId}">
+    <div class="rcard-hd"><span class="tag tag-purple">AI ANALYSIS</span></div>
+    <div class="rcard-bd">${ldHTML('Getting AI analysis...')}</div>
+  </div>`;
+
+  btn.classList.remove('running'); btn.textContent = '▶ Analyze';
+  setStatus('ANALYSIS COMPLETE', `Issues: ${errCnt}E ${wrnCnt}W`);
+
+  try {
+    const issSummary = issues.length ? issues.map(i=>`[${i.rule}] L${i.line}: ${i.msg}`).join('; ') : 'None found';
+    const aiTxt = await callAI(
+      'You are an expert RTL/Verilog reviewer. Give a concise (max 200 words) technical analysis: what the module does, any issues beyond static rules, power tips, synthesis notes.',
+      `Rule engine results: ${issSummary}\n\nVerilog:\n${code}`
+    );
+    document.getElementById(aiId).querySelector('.rcard-bd').innerHTML =
+      `<div style="white-space:pre-wrap;line-height:1.75;font-size:12px">${esc(aiTxt)}</div>`;
+  } catch(e) {
+    document.getElementById(aiId).querySelector('.rcard-bd').innerHTML =
+      `<span style="color:var(--text3)">AI analysis unavailable — rule-based results shown above.</span>`;
+  }
+}
+
+// ══════════════════════════════════════════
+//  GENERATE — opens FULL SEPARATE PAGE
+// ══════════════════════════════════════════
+async function generateRTL() {
+  const prompt = document.getElementById('prompt-input').value.trim();
+  if (!prompt) { alert('Please describe the module you want to generate.'); return; }
+
+  const btn = document.getElementById('gen-btn');
+  btn.classList.add('running'); btn.textContent = 'Generating...';
+  setStatus('GENERATING RTL...', null);
+
+  const opts   = parsePrompt(prompt);
+  const code   = buildVerilog(opts);
+  const cplx   = estimateComplexity(code);
+  const issues = runAllRules(code);
+
+  // Build the full standalone page HTML
+  const pageHTML = buildResultPage(prompt, opts, code, cplx, issues);
+
+  // Open in new tab
+  const w = window.open('', '_blank');
+  w.document.write(pageHTML);
+  w.document.close();
+
+  btn.classList.remove('running'); btn.textContent = '▶ Generate RTL';
+  setStatus('GENERATION COMPLETE — opened in new tab', 'Issues: 0E 0W');
+
+  // Async: inject AI description into the new page
+  try {
+    const desc = await callAI(
+      'You are an RTL documentation expert. Write a 4–6 sentence technical description of the Verilog module: what it does, port overview, key design decisions, synthesis notes. Be precise and concise.',
+      `Module prompt: "${prompt}"\n\nCode:\n${code}`
+    );
+    if (w && !w.closed) {
+      const el = w.document.getElementById('ai-desc-content');
+      if (el) el.innerHTML = desc.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    }
+  } catch(e) {
+    const el = w && w.document.getElementById('ai-desc-content');
+    if (el) el.textContent = `Synthesizable Verilog generated for: "${prompt}". See code on the left.`;
+  }
+}
+
+function buildResultPage(prompt, opts, code, cplx, issues) {
+  const errCnt = issues.filter(i=>i.sev==='E').length;
+  const wrnCnt = issues.filter(i=>i.sev==='W').length;
+  const ec = c => String(c).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const issHtml = issues.length ? issues.map(i=>`
+    <div style="padding:8px 0;border-bottom:1px solid #1e2d45;display:flex;gap:10px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#00c8f0;min-width:54px;flex-shrink:0">Line ${i.line}</span>
+      <div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:1px 6px;border:1px solid ${i.sev==='E'?'#ff3d5a':'#ffcc44'};color:${i.sev==='E'?'#ff3d5a':'#ffcc44'};margin-right:6px">${i.sev}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#384d66;margin-right:6px">[${i.rule}]</span>
+        <span style="font-size:12px;color:#b0c0d0">${ec(i.msg)}</span>
+        ${i.fix?`<div style="margin-top:5px;padding:5px 8px;background:rgba(0,232,154,0.07);border-left:2px solid #00e89a;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#00e89a">${ec(i.fix.trim().substring(0,120))}</div>`:''}
+      </div>
+    </div>`).join('')
+  : `<div style="color:#00e89a;font-family:'IBM Plex Mono',monospace;font-size:12px">All 8 rule checks passed. Zero structural issues.</div>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RTL Forge — ${ec(opts.type.toUpperCase())} · Generated Output</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:#060810;color:#d0dff0;font-family:'Rajdhani',sans-serif;font-size:16px}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,200,240,0.025)1px,transparent 1px),linear-gradient(90deg,rgba(0,200,240,0.025)1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+.page{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh}
+/* Header */
+.pg-hdr{height:56px;background:#0a0e18;border-bottom:2px solid #1e2d45;display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;box-shadow:0 2px 20px rgba(0,200,240,0.07)}
+.pg-logo{display:flex;align-items:center;gap:12px}
+.pg-gem{width:32px;height:32px;background:linear-gradient(135deg,#0088bb,#00c8f0);clip-path:polygon(15% 0%,85% 0%,100% 15%,100% 85%,85% 100%,15% 100%,0% 85%,0% 15%);display:grid;place-items:center}
+.pg-gem svg{width:16px;height:16px;fill:#fff}
+.pg-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:#00c8f0;letter-spacing:3px}
+.pg-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#384d66;letter-spacing:2px}
+.pg-meta{display:flex;align-items:center;gap:8px}
+.pg-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border:1px solid;letter-spacing:1px}
+.pg-badge-g{border-color:#00e89a;color:#00e89a;background:rgba(0,232,154,0.08)}
+.pg-badge-a{border-color:#0088bb;color:#00c8f0;background:rgba(0,200,240,0.08)}
+/* Prompt bar */
+.prompt-bar{background:#0d1220;border-bottom:2px solid #1e2d45;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.prompt-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;color:#384d66;text-transform:uppercase;flex-shrink:0}
+.prompt-val{font-family:'Rajdhani',sans-serif;font-size:15px;color:#00c8f0;font-weight:600}
+.prompt-tags{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+.ptag{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 10px;border:1px solid #1e2d45;color:#7090b0;background:#0a0e18}
+/* Main grid: 2 columns */
+.main-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden}
+.col{display:flex;flex-direction:column;overflow:hidden;padding:16px}
+.col-l{border-right:2px solid #1e2d45}
+/* Section boxes */
+.sbox{background:#0d1220;border:2px solid #1e2d45;margin-bottom:14px;overflow:hidden;flex-shrink:0}
+.sbox-hd{background:#080b16;border-bottom:2px solid #1e2d45;padding:10px 14px;display:flex;align-items:center;gap:8px}
+.sbox-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;color:#00c8f0;text-transform:uppercase}
+.sbox-dim{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;color:#384d66;text-transform:uppercase}
+.sbox-bd{padding:0}
+/* Code */
+.code-wrap{position:relative}
+pre.gen-code{background:#060810;border:none;padding:16px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#00e89a;overflow:auto;white-space:pre;line-height:1.65;max-height:420px}
+.copy-abs{position:absolute;top:8px;right:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 10px;background:#0d1220;border:1px solid #253550;color:#7090b0;cursor:pointer;letter-spacing:1px;transition:all 0.2s;z-index:2}
+.copy-abs:hover{border-color:#00c8f0;color:#00c8f0}
+.btn-row{padding:12px 14px;border-top:1px solid #1e2d45;display:flex;gap:8px;background:#080b16}
+.pbtn{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:7px 16px;border:1px solid;cursor:pointer;letter-spacing:1px;transition:all 0.18s}
+.pbtn-p{background:#00c8f0;border-color:#00c8f0;color:#000;font-weight:600}
+.pbtn-p:hover{background:#00eeff;box-shadow:0 0 20px rgba(0,200,240,0.4)}
+.pbtn-o{background:transparent;border-color:#1e2d45;color:#7090b0}
+.pbtn-o:hover{border-color:#00c8f0;color:#00c8f0}
+/* Right col cards */
+.rbox{background:#0d1220;border:2px solid #1e2d45;margin-bottom:14px;overflow:hidden;flex-shrink:0}
+.rbox-hd{background:#080b16;border-bottom:1px s
